@@ -1,33 +1,24 @@
-// === USTAWIENIA ===
+// === KONFIGURACJA ===
 const CLIENT_ID = "TUTAJ_WSTAW_SWÓJ_CLIENT_ID.apps.googleusercontent.com";
-const API_KEY = "TUTAJ_WSTAW_SWÓJ_API_KEY";
 const SCOPES = "https://www.googleapis.com/auth/calendar.readonly";
 
-// Tutaj wpisujesz ID kalendarzy, które chcesz śledzić
+// Wybierasz swoje kalendarze
 const calendarIds = [
   "primary",
   "twoj_inny_kalendarz_id@group.calendar.google.com"
 ];
 
-// === AUTORYZACJA ===
 let tokenClient;
-let gapiInited = false;
-let gisInited = false;
 
+// === AUTORYZACJA ===
 document.getElementById("authorize_button").onclick = () => {
   tokenClient.requestAccessToken({ prompt: 'consent' });
 };
 
 function gapiLoaded() {
-  gapi.load('client', initializeGapiClient);
-}
-
-async function initializeGapiClient() {
-  await gapi.client.init({
-    apiKey: API_KEY,
-    discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest"],
+  gapi.load("client", async () => {
+    await gapi.client.load("calendar", "v3");
   });
-  gapiInited = true;
 }
 
 function gisLoaded() {
@@ -38,10 +29,9 @@ function gisLoaded() {
       await listCalendarsData();
     },
   });
-  gisInited = true;
 }
 
-// === LOGIKA OBLICZEŃ ===
+-// === LOGIKA OBLICZEŃ ===
 async function listCalendarsData() {
   const now = new Date();
   const months = [];
