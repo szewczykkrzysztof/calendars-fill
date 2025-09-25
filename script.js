@@ -31,7 +31,7 @@ function gisLoaded() {
     client_id: CLIENT_ID,
     scope: SCOPES,
     callback: async (resp) => {
-      console.log("OAuth callback działa:", resp);
+      console.log("OAuth zalogował:", resp);
       document.getElementById("authorize_button").style.display = "none";
       await listCalendarsData();
     },
@@ -42,6 +42,8 @@ function gisLoaded() {
 async function listCalendarsData() {
   const now = new Date();
   const months = [];
+
+  console.log("Start pobierania kalendarzy dla:", calendarIds);
 
   for (let i = 0; i < 12; i++) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -62,6 +64,8 @@ async function listCalendarsData() {
         singleEvents: true,
         orderBy: "startTime",
       });
+
+      console.log("Dane z kalendarza:", calId, resp);
 
       let busyMs = 0;
       for (let ev of resp.result.items) {
