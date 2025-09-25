@@ -15,29 +15,6 @@ const calendarIds = [
 
 let tokenClient;
 
-// === AUTORYZACJA ===
-document.getElementById("authorize_button").onclick = () => {
-  tokenClient.requestAccessToken({ prompt: 'consent' });
-};
-
-function gapiLoaded() {
-  gapi.load("client", async () => {
-    await gapi.client.load("calendar", "v3");
-  });
-}
-
-function gisLoaded() {
-  tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: CLIENT_ID,
-    scope: SCOPES,
-    callback: async (resp) => {
-      console.log("OAuth zalogował:", resp);
-      document.getElementById("authorize_button").style.display = "none";
-      await listCalendarsData();
-    },
-  });
-}
-
 -// === LOGIKA OBLICZEŃ ===
 async function listCalendarsData() {
   const now = new Date();
@@ -103,4 +80,27 @@ function renderTable(months, results) {
 
   html += "</table>";
   document.getElementById("output").innerHTML = html;
+}
+
+// === AUTORYZACJA ===
+document.getElementById("authorize_button").onclick = () => {
+  tokenClient.requestAccessToken({ prompt: 'consent' });
+};
+
+function gapiLoaded() {
+  gapi.load("client", async () => {
+    await gapi.client.load("calendar", "v3");
+  });
+}
+
+function gisLoaded() {
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: SCOPES,
+    callback: async (resp) => {
+      console.log("OAuth zalogował:", resp);
+      document.getElementById("authorize_button").style.display = "none";
+      await listCalendarsData();
+    },
+  });
 }
