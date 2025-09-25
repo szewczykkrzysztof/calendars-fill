@@ -4,8 +4,13 @@ const SCOPES = "https://www.googleapis.com/auth/calendar.readonly";
 
 // Wybierasz swoje kalendarze
 const calendarIds = [
-  "primary",
-  "twoj_inny_kalendarz_id@group.calendar.google.com"
+  "Pokój 101",
+  "Pokój 202",
+  "Pokój 203",
+  "Pokój 204",
+  "Pokój 205",
+  "Pokój 206",
+  "Pokój 207",
 ];
 
 let tokenClient;
