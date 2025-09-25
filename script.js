@@ -30,7 +30,9 @@ function gisLoaded() {
   tokenClient = google.accounts.oauth2.initTokenClient({
     client_id: CLIENT_ID,
     scope: SCOPES,
-    callback: async () => {
+    callback: async (resp) => {
+      console.log("OAuth callback działa:", resp);
+      document.getElementById("authorize_button").style.display = "none";
       await listCalendarsData();
     },
   });
