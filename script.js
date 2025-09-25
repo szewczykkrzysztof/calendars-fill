@@ -1,5 +1,5 @@
 // === KONFIGURACJA ===
-const CLIENT_ID = "TUTAJ_WSTAW_SWÓJ_CLIENT_ID.apps.googleusercontent.com";
+const CLIENT_ID = "16718101302-u4f3m2o7hscp3etlssn3fvsjg28m72h0.apps.googleusercontent.com";
 const SCOPES = "https://www.googleapis.com/auth/calendar.readonly";
 
 // Wybierasz swoje kalendarze
