@@ -15,7 +15,7 @@ const calendarIds = [
 
 let tokenClient;
 
--// === LOGIKA OBLICZEŃ ===
+// === LOGIKA OBLICZEŃ ===
 async function listCalendarsData() {
   const now = new Date();
   const months = [];
