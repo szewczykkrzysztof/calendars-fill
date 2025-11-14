@@ -49,14 +49,23 @@ async function listCalendarsData() {
         if (ev.start.dateTime && ev.end.dateTime) {
           const startEv = new Date(ev.start.dateTime);
           const endEv = new Date(ev.end.dateTime);
-          busyMs += (endEv - startEv);
-        }
+          
+        }else if (ev.start.date && ev.end.date) {
+        // Obsługa Wydarzeń całodniowych
+        startEv = new Date(ev.start.date); 
+        endEv = new Date(ev.end.date);
+
+        } else {
+        continue; // pomiń dziwne/niekompletne wydarzenia
+       }
+
+       busyMs += (endEv - startEv);  // sumuj czas wydarzeń w ms
       }
 
       const hoursBusy = busyMs / 1000 / 3600;
       const totalHours = 24 * new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
       const percent = ((hoursBusy / totalHours) * 100).toFixed(1);
-      results[calId].push(percent);
+      results[calId].push(percent);       // zapisz procent zapełnienia
     }
   }
 
