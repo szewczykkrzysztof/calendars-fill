@@ -48,12 +48,12 @@ async function listCalendarsData() {
         // Obsługa Wydarzeń całodniowych
         let startEv = new Date(ev.start.date); 
         let endEv = new Date(ev.end.date);
+        busyMs += (endEv - startEv);  // sumuj czas wydarzeń w ms
 
         } else {
         continue; // pomiń dziwne/niekompletne wydarzenia
        }
 
-       busyMs += (endEv - startEv);  // sumuj czas wydarzeń w ms
       }
 
       const hoursBusy = busyMs / 1000 / 3600;
