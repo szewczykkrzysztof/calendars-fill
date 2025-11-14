@@ -41,19 +41,13 @@ async function listCalendarsData() {
         singleEvents: true,
         orderBy: "startTime",
       });
-
-      console.log("Dane z kalendarza:", calId, resp);
-
+      
       let busyMs = 0;
       for (let ev of resp.result.items) {
-        if (ev.start.dateTime && ev.end.dateTime) {
-          const startEv = new Date(ev.start.dateTime);
-          const endEv = new Date(ev.end.dateTime);
-          
-        }else if (ev.start.date && ev.end.date) {
+        if (ev.start?.date && ev.end?.date) {
         // Obsługa Wydarzeń całodniowych
-        startEv = new Date(ev.start.date); 
-        endEv = new Date(ev.end.date);
+        let startEv = new Date(ev.start.date); 
+        let endEv = new Date(ev.end.date);
 
         } else {
         continue; // pomiń dziwne/niekompletne wydarzenia
