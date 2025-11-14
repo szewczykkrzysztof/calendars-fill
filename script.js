@@ -4,7 +4,7 @@ const SCOPES = "https://www.googleapis.com/auth/calendar.readonly";
 
 // Wybierasz swoje kalendarze
 const calendarIds = [
-  "Pokó17f08fe83ddde066de05ee5a91de4aa59525d2280e311e056c7516c170e056fe@group.calendar.google.com",
+  "17f08fe83ddde066de05ee5a91de4aa59525d2280e311e056c7516c170e056fe@group.calendar.google.com",
   "eb3b0721a613a56fbc53649819fbc147b780f34100bdef6208d483c40ea89966@group.calendar.google.com",
   "9eeqlsgr9o8da012ser6k2j63o@group.calendar.google.com",
   "urcl2erk9auhnnl69c027a0vhg@group.calendar.google.com",
