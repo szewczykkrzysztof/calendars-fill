@@ -46,13 +46,20 @@ async function listCalendarsData() {
       const start = new Date(month.getFullYear(), month.getMonth(), 1).toISOString();
       const end = new Date(month.getFullYear(), month.getMonth() + 1, 1).toISOString();
 
-      const resp = await gapi.client.calendar.events.list({
-        calendarId: calId,
-        timeMin: start,
-        timeMax: end,
-        singleEvents: true,
-        orderBy: "startTime",
-      });
+      let resp;
+      try {
+        resp = await gapi.client.calendar.events.list({
+          calendarId: calId,
+          timeMin: start,
+          timeMax: end,
+          singleEvents: true,
+          orderBy: "startTime",
+        });
+      } catch (err) {
+        console.error("Błąd pobierania eventów dla:", calId, err);
+        results[calName].push("ERR");
+        continue;
+      }
       
       let busyMs = 0;
       for (let ev of resp.result.items) {
