@@ -29,7 +29,19 @@ async function listCalendarsData() {
 
   let results = {};
   for (let calId of calendarIds) {
-    results[calId] = [];
+    // --- pobranie nazwy kalendarza ---
+    let calName = calId; // fallback w razie błędu
+    try {
+      const calResp = await gapi.client.calendar.calendars.get({
+        calendarId: calId
+      });
+      calName = calResp.result.summary;
+    } catch (err) {
+      console.warn("Nie udało się pobrać nazwy kalendarza:", calId, err);
+    }
+
+    results[calName] = []; // używamy nazwy jako klucza w results
+
     for (let month of months) {
       const start = new Date(month.getFullYear(), month.getMonth(), 1).toISOString();
       const end = new Date(month.getFullYear(), month.getMonth() + 1, 1).toISOString();
@@ -59,7 +71,8 @@ async function listCalendarsData() {
       const hoursBusy = busyMs / 1000 / 3600;
       const totalHours = 24 * new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
       const percent = ((hoursBusy / totalHours) * 100).toFixed(1);
-      results[calId].push(percent);       // zapisz procent zapełnienia
+      results[calName].push(percent);       // zapisz procent zapełnienia pod kluczem z nazwą kalendarza
+      console.log(`Kalendarz: ${calName}, Miesiąc: ${month.getFullYear()}-${month.getMonth()+1}, Zajętość: ${percent}%`);
     }
   }
 
@@ -73,9 +86,9 @@ function renderTable(months, results) {
   }
   html += "</tr>";
 
-  for (let calId in results) {
-    html += `<tr><td>${calId}</td>`;
-    for (let percent of results[calId]) {
+  for (let calName in results) {
+    html += `<tr><td>${calName}</td>`;
+    for (let percent of results[calName]) {
       html += `<td>${percent}%</td>`;
     }
     html += "</tr>";
