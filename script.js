@@ -8,7 +8,7 @@ const calendarIds = [
   "eb3b0721a613a56fbc53649819fbc147b780f34100bdef6208d483c40ea89966@group.calendar.google.com",
   "9eeqlsgr9o8da012ser6k2j63o@group.calendar.google.com",
   "urcl2erk9auhnnl69c027a0vhg@group.calendar.google.com",
-  "ivj8irgr4f2qmufduhegbc4hgs@group.calendar.google.com",
+  "fkaajd35f3usfsvcbakp290ei4@group.calendar.google.com",
   "k8s9nbpc6o3hcrj563lef233lo@group.calendar.google.com",
   "5sle8p37h45t953fprgi6gf39k@group.calendar.google.com",
 ];
