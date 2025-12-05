@@ -1,0 +1,19 @@
+name: Disable cache on scripts
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Upload files
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: './'
+    - name: Deploy
+      uses: actions/deploy-pages@v4
+      with:
+        headers: |
+          **/*.js: Cache-Control=no-cache
