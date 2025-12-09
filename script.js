@@ -15,34 +15,73 @@ const calendarIds = [
 
 let tokenClient;
 
-// === LOGIKA OBLICZEŃ ===
-async function listCalendarsData() {
+// === LOCAL STORAGE CACHE ===
+// Struktura:
+// calendarCache = {
+//   [calendarId]: {
+//      name: "...",
+//      events: [
+//         { title, start, end },
+//         ...
+//      ]
+//   }
+// }
+
+function loadCalendarCache() {
+  return JSON.parse(localStorage.getItem("calendarCache") || "{}");
+}
+
+function saveCalendarCache(cache) {
+  localStorage.setItem("calendarCache", JSON.stringify(cache));
+}
+
+// === Pobierz tylko skończone miesiące ===
+function getPastMonths() {
   const now = new Date();
   const months = [];
 
-  console.log("Start pobierania kalendarzy dla:", calendarIds);
-
-  for (let i = 0; i < 12; i++) {
+  // Do poprzedniego miesiąca (nie bieżący)
+  for (let i = 1; i <= 12; i++) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    months.unshift(new Date(d)); // od najstarszego
+    months.push(new Date(d));
   }
+  return months.reverse(); // od najstarszego
+}
 
-  let results = {};
+// === LOGIKA OBLICZEŃ ===
+async function listCalendarsData() {
+  const cache = loadCalendarCache();
+  const months = getPastMonths();
+
+  // Pierwsza tabela wyników – klucz to nazwa kalendarza
+  const results = {};
+
   for (let calId of calendarIds) {
-    // --- pobranie nazwy kalendarza ---
-    let calName = calId; // fallback w razie błędu
+    console.log("Przetwarzam:", calId);
+
+    // Jeśli nie ma cache – przygotuj
+    if (!cache[calId]) cache[calId] = { name: calId, events: [] };
+
+    // Pobierz nazwę kalendarza (tylko raz)
     try {
-      const calResp = await gapi.client.calendar.calendars.get({
-        calendarId: calId
-      });
-      calName = calResp.result.summary;
-    } catch (err) {
-      console.warn("Nie udało się pobrać nazwy kalendarza:", calId, err);
+      const calResp = await gapi.client.calendar.calendars.get({ calendarId: calId });
+      cache[calId].name = calResp.result.summary;
+    } catch (e) {
+      console.warn("Nie pobrano nazwy kalendarza:", e);
     }
 
-    results[calName] = []; // używamy nazwy jako klucza w results
+    const calName = cache[calId].name;
+    results[calName] = [];
 
+    // Pobierz wydarzenia tylko dla miesięcy, których jeszcze nie ma w cache
     for (let month of months) {
+      const monthKey = `${month.getFullYear()}-${month.getMonth()}`;
+
+      // Sprawdź czy wydarzenia dla tego miesiąca już są
+      const exists = cache[calId].events.some(ev => ev.monthKey === monthKey);
+      if (exists) continue;
+
+      // Pobranie z API
       const start = new Date(month.getFullYear(), month.getMonth(), 1).toISOString();
       const end = new Date(month.getFullYear(), month.getMonth() + 1, 1).toISOString();
 
@@ -56,35 +95,57 @@ async function listCalendarsData() {
           orderBy: "startTime",
         });
       } catch (err) {
-        console.error("Błąd pobierania eventów dla:", calId, err);
-        results[calName].push("ERR");
+        console.error("Błąd API:", err);
         continue;
       }
-      
+
+      // Zapisz wydarzenia z nazwą kalendarza
+      const newEvents = resp.result.items.map(ev => ({
+        title: ev.summary || "(bez tytułu)",
+        start: ev.start.date || ev.start.dateTime,
+        end: ev.end.date || ev.end.dateTime,
+        monthKey
+      }));
+
+      cache[calId].events.push(...newEvents);
+    }
+
+    saveCalendarCache(cache);
+
+    // === LICZENIE ZAPEŁNIENIA Z CACHE ===
+    for (let month of months) {
+      const monthKey = `${month.getFullYear()}-${month.getMonth()}`;
+
+      const events = cache[calId].events.filter(ev => ev.monthKey === monthKey);
+
       let busyMs = 0;
-      for (let ev of resp.result.items) {
-        if (ev.start?.date && ev.end?.date) {
-        // Obsługa Wydarzeń całodniowych
-        let startEv = new Date(ev.start.date); 
-        let endEv = new Date(ev.end.date);
-        busyMs += (endEv - startEv);  // sumuj czas wydarzeń w ms
 
-        } else {
-        continue; // pomiń dziwne/niekompletne wydarzenia
-       }
+      for (let ev of events) {
+        let startEv = new Date(ev.start);
+        let endEv = new Date(ev.end);
 
+        // 🔥 Google calendar: for all-day events end.date is EXCLUSIVE
+        if (ev.start.length === 10 && ev.end.length === 10) {
+          endEv.setDate(endEv.getDate() - 1);
+          endEv.setHours(23, 59, 59, 999);
+        }
+
+        busyMs += (endEv - startEv);
       }
 
-      const hoursBusy = busyMs / 1000 / 3600;
       const totalHours = 24 * new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
-      const percent = ((hoursBusy / totalHours) * 100).toFixed(1);
-      results[calName].push(percent);       // zapisz procent zapełnienia pod kluczem z nazwą kalendarza
-      console.log(`Kalendarz: ${calName}, Miesiąc: ${month.getFullYear()}-${month.getMonth()+1}, Zajętość: ${percent}%`);
+      const busyHours = busyMs / 1000 / 3600;
+
+      // 🔥 Gwarantuje max 100%
+      const percent = Math.min(100, ((busyHours / totalHours) * 100)).toFixed(1);
+
+      results[calName].push(percent);
     }
   }
 
   renderTable(months, results);
 }
+
 
 function renderTable(months, results) {
   let html = "<table><tr><th>Kalendarz</th>";
