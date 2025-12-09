@@ -118,20 +118,67 @@ async function listCalendarsData() {
 
       const events = cache[calId].events.filter(ev => ev.monthKey === monthKey);
 
-      let busyMs = 0;
+      // ---------- zamiast prostego busyMs += (endEv - startEv) ----------
+      // Przygotuj granice miesiąca jako obiekty Date
+      const monthStart = new Date(month.getFullYear(), month.getMonth(), 1);
+      const monthEnd = new Date(month.getFullYear(), month.getMonth() + 1, 1);
 
-      for (let ev of events) {
-        let startEv = new Date(ev.start);
-        let endEv = new Date(ev.end);
+      // Zbiór przyciętych przedziałów [sMs, eMs)
+      const intervals = [];
 
-        // 🔥 Google calendar: for all-day events end.date is EXCLUSIVE
-        if (ev.start.length === 10 && ev.end.length === 10) {
-          endEv.setDate(endEv.getDate() - 1);
-          endEv.setHours(23, 59, 59, 999);
+      const items = resp.result.items || [];
+      for (let ev of items) {
+        // obsłuż zarówno all-day (ev.start.date) jak i time-specific (ev.start.dateTime)
+        let s = ev.start?.dateTime ? new Date(ev.start.dateTime) : (ev.start?.date ? new Date(ev.start.date) : null);
+        let e = ev.end?.dateTime ? new Date(ev.end.dateTime) : (ev.end?.date ? new Date(ev.end.date) : null);
+
+        if (!s || !e) continue; // pomiń niekompletne
+
+        // Przytnij przedział do granic miesiąca
+        if (e <= monthStart || s >= monthEnd) {
+          // cały event poza zakresem miesiąca
+          continue;
         }
 
-        busyMs += (endEv - startEv);
+        const clippedStart = s < monthStart ? monthStart : s;
+        const clippedEnd = e > monthEnd ? monthEnd : e;
+
+        // Konwertuj na ms
+        const sMs = clippedStart.getTime();
+        const eMs = clippedEnd.getTime();
+
+        if (eMs > sMs) intervals.push([sMs, eMs]);
       }
+
+      // Jeśli brak przedziałów → busyMs = 0
+      let busyMs = 0;
+      if (intervals.length > 0) {
+        // Sortuj po starcie
+        intervals.sort((a, b) => a[0] - b[0]);
+
+        // Scal nakładające się przedziały
+        const merged = [];
+        let [curS, curE] = intervals[0];
+        for (let i = 1; i < intervals.length; i++) {
+          const [s, e] = intervals[i];
+          if (s <= curE) {
+            // nakłada się → rozszerz końcowy punkt
+            curE = Math.max(curE, e);
+          } else {
+            // zamknij bieżący i rozpocznij nowy
+            merged.push([curS, curE]);
+            curS = s; curE = e;
+          }
+        }
+        merged.push([curS, curE]);
+
+        // Sumuj długość scalonych przedziałów
+        for (let [s, e] of merged) busyMs += (e - s);
+
+        // DEBUG (opcjonalnie) — wypisz przedziały i sumę
+        console.log("Miesiąc:", month.getFullYear(), month.getMonth() + 1, "raw intervals:", intervals, "merged:", merged, "busyMs:", busyMs);
+      }
+
 
       const totalHours = 24 * new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
       const busyHours = busyMs / 1000 / 3600;
@@ -150,7 +197,7 @@ async function listCalendarsData() {
 function renderTable(months, results) {
   let html = "<table><tr><th>Kalendarz</th>";
   for (let m of months) {
-    html += `<th>${m.getFullYear()}-${(m.getMonth()+1).toString().padStart(2,'0')}</th>`;
+    html += `<th>${m.getFullYear()}-${(m.getMonth() + 1).toString().padStart(2, '0')}</th>`;
   }
   html += "</tr>";
 
