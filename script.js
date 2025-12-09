@@ -188,3 +188,12 @@ function gisLoaded() {
     },
   });
 }
+
+// === WYCZYŚĆ CACHE ===
+document.getElementById("clear_cache_button").onclick = () => {
+  localStorage.removeItem("calendarCache");
+  localStorage.removeItem("calendarEvents");
+  document.getElementById("cache_status").innerText = "Cache wyczyszczony.";
+  console.log("Cache został wyczyszczony");
+};
+
