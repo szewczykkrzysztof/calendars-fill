@@ -136,6 +136,7 @@ async function listCalendarsData() {
 
       const totalDays = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
       const percent = Math.min(100, (busyDays / totalDays) * 100).toFixed(1);
+      console.log(`  ${monthKey}: ${percent}%, zajęte dni: ${busyDays}/${totalDays}`);
 
       results[calName].push(percent);
     }
