@@ -120,6 +120,9 @@ async function listCalendarsData() {
 
       let busyMs = 0;
 
+      const firstDay = new Date(month.getFullYear(), month.getMonth(), 1);
+      const lastDay = new Date(month.getFullYear(), month.getMonth() + 1, 0, 23, 59, 59, 999);
+
       for (let ev of events) {
         let startEv = new Date(ev.start);
         let endEv = new Date(ev.end);
@@ -129,6 +132,9 @@ async function listCalendarsData() {
           endEv.setDate(endEv.getDate() - 1);
           endEv.setHours(23, 59, 59, 999);
         }
+        // Przytnij do zakresu miesiąca
+        if (startEv < firstDay) startEv = firstDay;
+        if (endEv > lastDay) endEv = lastDay; 
 
         busyMs += (endEv - startEv);
       }
