@@ -118,24 +118,35 @@ async function listCalendarsData() {
 
       const events = cache[calId].events.filter(ev => ev.monthKey === monthKey);
 
-      const firstDay = new Date(month.getFullYear(), month.getMonth(), 1);
-      const lastDay = new Date(month.getFullYear(), month.getMonth() + 1, 0, 23, 59, 59, 999);
+      // --- PATCH: liczenie DNI jako indeksów kalendarzowych ---
+      function dayIndex(dateStr) {
+        return Math.floor(
+          new Date(dateStr + "T00:00:00Z").getTime() / 86400000
+        );
+      }
+
+      const year = month.getFullYear();
+      const m = month.getMonth(); // 0-based
+
+      const monthStart = dayIndex(`${year}-${String(m + 1).padStart(2, "0")}-01`);
+      const monthEnd = dayIndex(`${year}-${String(m + 2).padStart(2, "0")}-01`);
 
       let busyDays = 0;
 
       for (let ev of events) {
-        let start = new Date(ev.start);
-        let end = new Date(ev.end); // EXCLUSIVE
+        const evStart = dayIndex(ev.start); // inclusive
+        const evEnd = dayIndex(ev.end);     // exclusive
 
-        if (start < firstDay) start = firstDay;
-        if (end > lastDay) end = new Date(lastDay.getTime() + 1);
+        const realStart = Math.max(evStart, monthStart);
+        const realEnd = Math.min(evEnd, monthEnd);
 
-        const days = (end - start) / 86400000;
-        console.log(`    Wydarzenie: ${ev.title}, dni: ${days}`);
+        const days = Math.max(0, realEnd - realStart);
+        console.log(`    Wydarzenie: ${ev.title},  ilość dni: ${days}`);
+
         busyDays += days;
       }
 
-      const totalDays = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+      const totalDays = monthEnd - monthStart;
       const percent = Math.min(100, (busyDays / totalDays) * 100).toFixed(1);
       console.log(`  ${monthKey}: ${percent}%, zajęte dni: ${busyDays}/${totalDays}`);
 
