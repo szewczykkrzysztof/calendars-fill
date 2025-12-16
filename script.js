@@ -118,32 +118,24 @@ async function listCalendarsData() {
 
       const events = cache[calId].events.filter(ev => ev.monthKey === monthKey);
 
-      let busyMs = 0;
-
       const firstDay = new Date(month.getFullYear(), month.getMonth(), 1);
       const lastDay = new Date(month.getFullYear(), month.getMonth() + 1, 0, 23, 59, 59, 999);
 
+      let busyDays = 0;
+
       for (let ev of events) {
-        let startEv = new Date(ev.start);
-        let endEv = new Date(ev.end);
+        let start = new Date(ev.start);
+        let end = new Date(ev.end); // EXCLUSIVE
 
-        // 🔥 Google calendar: for all-day events end.date is EXCLUSIVE
-        if (ev.start.length === 10 && ev.end.length === 10) {
-          endEv.setDate(endEv.getDate() - 1);
-          endEv.setHours(23, 59, 59, 999);
-        }
-        // Przytnij do zakresu miesiąca
-        if (startEv < firstDay) startEv = firstDay;
-        if (endEv > lastDay) endEv = lastDay; 
+        if (start < firstDay) start = firstDay;
+        if (end > lastDay) end = new Date(lastDay.getTime() + 1);
 
-        busyMs += (endEv - startEv);
+        const days = (end - start) / 86400000;
+        busyDays += days;
       }
 
-      const totalHours = 24 * new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
-      const busyHours = busyMs / 1000 / 3600;
-
-      // 🔥 Gwarantuje max 100%
-      const percent = Math.min(100, ((busyHours / totalHours) * 100)).toFixed(1);
+      const totalDays = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+      const percent = Math.min(100, (busyDays / totalDays) * 100).toFixed(1);
 
       results[calName].push(percent);
     }
