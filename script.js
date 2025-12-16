@@ -131,6 +131,7 @@ async function listCalendarsData() {
         if (end > lastDay) end = new Date(lastDay.getTime() + 1);
 
         const days = (end - start) / 86400000;
+        console.log(`    Wydarzenie: ${ev.title}, dni: ${days}`);
         busyDays += days;
       }
 
